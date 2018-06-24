@@ -1,0 +1,9 @@
+#search {
+    background: transparent;
+    border: transparent;
+    box-shadow: none;
+}
+
+#search:focus {
+    outline: none;
+}
