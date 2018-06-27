@@ -27,6 +27,10 @@ chrome.runtime.onConnect.addListener(function (port) {
             code: "var styleElement = document.getElementById('google-chrome-search-bar-extension-style-element');" +
                 "styleElement.parentNode.removeChild(styleElement);"
         });
+        
+        chrome.tabs.sendMessage(openedInTabId, {
+            name: "reset"
+        });
 
         openedInTabId = null;
     });
