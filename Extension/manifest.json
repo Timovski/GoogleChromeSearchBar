@@ -4,16 +4,10 @@
     "version": "0.1",
     "manifest_version": 2,
     "permissions": [
-        "tabs",
+        "activeTab",
         "http://*/*",
         "https://*/*"
     ],
-    "background": {
-        "scripts": [
-            "background.js"
-        ],
-        "persistent": false
-    },
     "content_scripts": [
         {
             "matches": [
