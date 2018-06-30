@@ -1,3 +1,8 @@
+body {
+    width: 325px;
+    margin: 0;
+}
+
 #search {
     background: transparent;
     border: transparent;

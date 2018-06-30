@@ -1,27 +1,43 @@
 var searchText;
 var timeoutHandle;
+var timeouRunning;
+var searchedText;
 
 var searchElement = document.getElementById("search");
 var currentElement = document.getElementById("current");
 var totalElement = document.getElementById("total");
 
 var resetTimeoutAndSearch = function (milliseconds) {
+    timeouRunning = true;
     window.clearTimeout(timeoutHandle);
     timeoutHandle = window.setTimeout(function () {
-        port.postMessage({ name: "search", value: searchText });
+        searchedText = searchElement.value;
+        if (searchedText) {
+            port.postMessage({ name: "search", value: searchedText });
+        } else {
+            totalElement.innerHTML = currentElement.innerHTML = 0;
+        }
+        timeouRunning = false;
     }, milliseconds);
 };
 
-chrome.tabs.executeScript({
-    code: "window.getSelection().toString();"
-}, function (selection) {
-    searchText = selection[0].trim();
-
-    searchElement.value = searchText;
-    searchElement.select();
-
-    if (searchText) {
-        resetTimeoutAndSearch(1);
+searchElement.addEventListener("keyup", function (event) {
+    if (event.keyCode === 13) {
+        if (event.shiftKey) {
+            port.postMessage({ name: "previous" });
+        }
+        else {
+            port.postMessage({ name: "next" });
+        }
+    }
+    else if (searchedText === searchElement.value) {
+        return;
+    }
+    else {
+        if (!timeouRunning) {
+            port.postMessage({ name: "reset" });
+        }
+        resetTimeoutAndSearch(500);
     }
 });
 
@@ -43,9 +59,24 @@ chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     port = chrome.tabs.connect(tabs[0].id, { name: "popupConnection" });
     port.postMessage({ name: "initialize" });
     port.onMessage.addListener(function (message) {
-        if (message.name === "afterSearch") {
-            totalElement.innerHTML = message.value.total;
-            currentElement.innerHTML = message.value.focusIndex + 1;
+        if (message.name === "afterInitialize") {
+            searchText = message.value.trim();
+
+            if (searchText) {
+                searchElement.value = searchText;
+                searchElement.select();
+                resetTimeoutAndSearch(1);
+            } else {
+                totalElement.innerHTML = currentElement.innerHTML = 0;
+            }
+        }
+        else if (message.name === "afterSearch") {
+            if (message.value.total) {
+                totalElement.innerHTML = message.value.total;
+                currentElement.innerHTML = message.value.focusIndex + 1;
+            } else {
+                totalElement.innerHTML = currentElement.innerHTML = 0;
+            }
         }
         else if (message.name === "afterFocus") {
             currentElement.innerHTML = message.value + 1;

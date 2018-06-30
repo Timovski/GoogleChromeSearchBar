@@ -8,12 +8,19 @@ chrome.runtime.onConnect.addListener(function (port) {
     }
 
     port.onDisconnect.addListener(function () {
+        styleElement.parentNode.removeChild(styleElement);
         reset();
     });
 
     port.onMessage.addListener(function (message) {
         if (message.name === "initialize") {
             initialize();
+
+            var selection = window.getSelection().toString();
+            port.postMessage({ name: "afterInitialize", value: selection });
+        }
+        else if (message.name === "reset") {
+            reset();
         }
         else if (message.name === "search") {
             var originalInput = message.value;
@@ -22,8 +29,7 @@ chrome.runtime.onConnect.addListener(function (port) {
             var escapedInput = originalInput.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             var regExpInput = new RegExp(escapedInput, 'gi');
 
-            total = 0;
-            focusIndex = 0;
+            total = focusIndex = 0;
             search(lowerCaseInput, regExpInput);
             port.postMessage({ name: "afterSearch", value: { total: total, focusIndex: focusIndex } });
         }
@@ -58,6 +64,10 @@ var setFocus = function (index, forward) {
     }
 
     var element = document.getElementById("gcsbe-" + index);
+    if (!element) {
+        return;
+    }
+
     if (!element.parentElement.offsetWidth && !element.parentElement.offsetHeight) {
         if (forward) {
             setFocus(++focusIndex, true);
@@ -72,8 +82,6 @@ var setFocus = function (index, forward) {
 };
 
 var reset = function () {
-    styleElement.parentNode.removeChild(styleElement);
-
     var elements = document.getElementsByClassName("gcsbe-decorated-outer");
     while (elements.length) {
         var element = elements[0];
@@ -102,15 +110,8 @@ var search = function (lowerCaseInput, regExpInput) {
         }
     };
 
-    console.time('decorate');
-
     decorate(document.body);
-
-    console.timeEnd('decorate');
-
     setFocus(0, true);
-
-    console.log(total);
 };
 
 var initialize = function () {
