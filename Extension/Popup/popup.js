@@ -6,6 +6,9 @@ var searchedText;
 var searchElement = document.getElementById("search");
 var currentElement = document.getElementById("current");
 var totalElement = document.getElementById("total");
+var previousElement = document.getElementById("previous");
+var nextElement = document.getElementById("next");
+var closeElement = document.getElementById("close");
 
 var resetTimeoutAndSearch = function (milliseconds) {
     timeouRunning = true;
@@ -41,17 +44,35 @@ searchElement.addEventListener("keyup", function (event) {
     }
 });
 
-document.getElementById("next").addEventListener("click", function () {
-    port.postMessage({ name: "next" });
-});
-
-document.getElementById("previous").addEventListener("click", function () {
+previousElement.onclick = function () {
     port.postMessage({ name: "previous" });
-});
+};
+previousElement.onmouseover = function () {
+    previousElement.src = "Images/previous_hover.png";
+};
+previousElement.onmouseout = function () {
+    previousElement.src = "Images/previous.png";
+};
 
-document.getElementById("close").addEventListener("click", function () {
+nextElement.onclick = function () {
+    port.postMessage({ name: "next" });
+};
+nextElement.onmouseover = function () {
+    nextElement.src = "Images/next_hover.png";
+};
+nextElement.onmouseout = function () {
+    nextElement.src = "Images/next.png";
+};
+
+closeElement.onclick = function () {
     window.close();
-});
+};
+closeElement.onmouseover = function () {
+    closeElement.src = "Images/close_hover.png";
+};
+closeElement.onmouseout = function () {
+    closeElement.src = "Images/close.png";
+};
 
 // var background = chrome.extension.getBackgroundPage();
 // background.console.log('');

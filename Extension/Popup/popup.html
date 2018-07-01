@@ -6,12 +6,24 @@
 </head>
 
 <body>
-    <input type="text" id="search" autofocus>
-    <span id="current"></span>/<span id="total"></span>
-    
-    <button id="previous">prev</button>
-    <button id="next">next</button>
-    <button id="close">close</button>
+    <div id="wrapper">
+        <div id="outer">
+            <div id="inner-counters">
+                <span id="current"></span>/<span id="total"></span>
+            </div>
+            <div id="inner-text">
+                <input type="text" id="search" autofocus>
+            </div>
+        </div>
+    </div>
+
+    <div id="divider" class="absolute"></div>
+
+    <div class="absolute buttons">
+        <input type="image" id="previous" class="image-button" src="Images/previous.png" />
+        <input type="image" id="next" class="image-button" src="Images/next.png" />
+        <input type="image" id="close" class="image-button" src="Images/close.png" />
+    </div>
 
     <script src="popup.js"></script>
 </body>

@@ -1,14 +1,61 @@
 body {
-    width: 325px;
+    width: 340px;
+    height: 39px;
     margin: 0;
 }
 
+.absolute {
+    position: absolute;
+}
+
+#wrapper {
+    width: 202px;
+}
+
+#outer {
+    overflow: hidden;
+    width: 100%;
+    padding: 10px 0 0 16px;
+}
+
+#inner-counters {
+    float: right;
+    padding-top: 2px;
+    color: #b1b1b1;
+}
+
+#inner-text {
+    overflow: hidden;
+}
+
 #search {
+    width: 97%;
     background: transparent;
     border: transparent;
     box-shadow: none;
 }
 
 #search:focus {
+    outline: none;
+}
+
+.buttons {
+    top: 5px;
+    right: 8px; 
+}
+
+#divider {
+    background-color: #e2e2e2;
+    width: 1px;
+    height: 28px;
+    top: 5px;
+    right: 111px;
+}
+
+.image-button {
+    cursor: auto;
+}
+
+.image-button:focus {
     outline: none;
 }
