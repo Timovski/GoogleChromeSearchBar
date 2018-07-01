@@ -22,6 +22,7 @@ body {
     float: right;
     padding-top: 2px;
     color: #b1b1b1;
+    user-select: none;
 }
 
 #inner-text {
