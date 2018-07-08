@@ -1,7 +1,6 @@
-var searchText;
+var oldSearchText;
 var timeoutHandle;
 var timeouRunning;
-var searchedText;
 
 var searchElement = document.getElementById("search");
 var currentElement = document.getElementById("current");
@@ -14,17 +13,12 @@ var resetTimeoutAndSearch = function (milliseconds) {
     timeouRunning = true;
     window.clearTimeout(timeoutHandle);
     timeoutHandle = window.setTimeout(function () {
-        searchedText = searchElement.value;
-        if (searchedText) {
-            port.postMessage({ name: "search", value: searchedText });
-        } else {
-            totalElement.innerHTML = currentElement.innerHTML = 0;
-        }
+        port.postMessage({ name: "search", value: oldSearchText });
         timeouRunning = false;
     }, milliseconds);
 };
 
-searchElement.addEventListener("keyup", function (event) {
+searchElement.onkeyup = function (event) {
     if (event.keyCode === 13) {
         if (event.shiftKey) {
             port.postMessage({ name: "previous" });
@@ -33,35 +27,45 @@ searchElement.addEventListener("keyup", function (event) {
             port.postMessage({ name: "next" });
         }
     }
-    else if (searchedText === searchElement.value) {
+    else if (oldSearchText === searchElement.value) {
         return;
     }
     else {
-        if (!timeouRunning) {
+        if (oldSearchText && !timeouRunning) {
             port.postMessage({ name: "reset" });
         }
+
+        oldSearchText = searchElement.value;
         resetTimeoutAndSearch(500);
     }
-});
+};
 
 previousElement.onclick = function () {
     port.postMessage({ name: "previous" });
 };
 previousElement.onmouseover = function () {
-    previousElement.src = "Images/previous_hover.png";
+    if (totalElement.innerHTML > 0) {
+        previousElement.src = "Images/previous_hover.png";
+    }
 };
 previousElement.onmouseout = function () {
-    previousElement.src = "Images/previous.png";
+    if (totalElement.innerHTML > 0) {
+        previousElement.src = "Images/previous.png";
+    }
 };
 
 nextElement.onclick = function () {
     port.postMessage({ name: "next" });
 };
 nextElement.onmouseover = function () {
-    nextElement.src = "Images/next_hover.png";
+    if (totalElement.innerHTML > 0) {
+        nextElement.src = "Images/next_hover.png";
+    }
 };
 nextElement.onmouseout = function () {
-    nextElement.src = "Images/next.png";
+    if (totalElement.innerHTML > 0) {
+        nextElement.src = "Images/next.png";
+    }
 };
 
 closeElement.onclick = function () {
@@ -78,29 +82,27 @@ closeElement.onmouseout = function () {
 // background.console.log('');
 chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     port = chrome.tabs.connect(tabs[0].id, { name: "popupConnection" });
-    port.postMessage({ name: "initialize" });
+    port.postMessage({ name: "init" });
     port.onMessage.addListener(function (message) {
-        if (message.name === "afterInitialize") {
-            searchText = message.value.trim();
+        if (message.name === "updateSearchText") {
+            oldSearchText = message.value;
+            searchElement.value = message.value;
+            searchElement.select();
+        }
+        else if (message.name === "updateCounters") {
+            totalElement.innerHTML = message.value.total;
+            currentElement.innerHTML = message.value.focusIndex;
 
-            if (searchText) {
-                searchElement.value = searchText;
-                searchElement.select();
-                resetTimeoutAndSearch(1);
+            if (message.value.total > 0) {
+                previousElement.src = "Images/previous.png";
+                nextElement.src = "Images/next.png";
             } else {
-                totalElement.innerHTML = currentElement.innerHTML = 0;
+                previousElement.src = "Images/previous_disabled.png";
+                nextElement.src = "Images/next_disabled.png";
             }
         }
-        else if (message.name === "afterSearch") {
-            if (message.value.total) {
-                totalElement.innerHTML = message.value.total;
-                currentElement.innerHTML = message.value.focusIndex + 1;
-            } else {
-                totalElement.innerHTML = currentElement.innerHTML = 0;
-            }
-        }
-        else if (message.name === "afterFocus") {
-            currentElement.innerHTML = message.value + 1;
+        else if (message.name === "updateCurrent") {
+            currentElement.innerHTML = message.value;
         }
     });
 });

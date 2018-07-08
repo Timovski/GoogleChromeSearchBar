@@ -1,6 +1,5 @@
 var total;
 var focusIndex;
-var styleElement;
 
 chrome.runtime.onConnect.addListener(function (port) {
     if (port.name !== "popupConnection") {
@@ -8,53 +7,49 @@ chrome.runtime.onConnect.addListener(function (port) {
     }
 
     port.onDisconnect.addListener(function () {
-        styleElement.parentNode.removeChild(styleElement);
         reset();
     });
 
     port.onMessage.addListener(function (message) {
-        if (message.name === "initialize") {
-            initialize();
-
-            var selection = window.getSelection().toString();
-            port.postMessage({ name: "afterInitialize", value: selection });
+        if (message.name === "init") {
+            var selection = window.getSelection().toString().trim();
+            port.postMessage({ name: "updateSearchText", value: selection });
+            search(selection);
+            port.postMessage({ name: "updateCounters", value: { total: total, focusIndex: focusIndex } });
         }
         else if (message.name === "reset") {
             reset();
         }
         else if (message.name === "search") {
-            var originalInput = message.value;
-            var lowerCaseInput = originalInput.toLowerCase();
-
-            var escapedInput = originalInput.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            var regExpInput = new RegExp(escapedInput, 'gi');
-
-            total = focusIndex = 0;
-            search(lowerCaseInput, regExpInput);
-            port.postMessage({ name: "afterSearch", value: { total: total, focusIndex: focusIndex } });
+            search(message.value);
+            port.postMessage({ name: "updateCounters", value: { total: total, focusIndex: focusIndex } });
         }
         else if (message.name === "next") {
-            setFocus(++focusIndex, true);
-            port.postMessage({ name: "afterFocus", value: focusIndex });
+            setFocus(true);
+            port.postMessage({ name: "updateCurrent", value: focusIndex });
         }
         else if (message.name === "previous") {
-            setFocus(--focusIndex, false);
-            port.postMessage({ name: "afterFocus", value: focusIndex });
+            setFocus(false);
+            port.postMessage({ name: "updateCurrent", value: focusIndex });
         }
     });
 });
 
-var setFocus = function (index, forward) {
+var setFocus = function (forward) {
+    if (!total) {
+        return;
+    }
+
     if (forward) {
-        if (index >= total) {
-            index = 0;
-            focusIndex = 0;
+        focusIndex++;
+        if (focusIndex > total) {
+            focusIndex = 1;
         }
     }
     else {
-        if (index < 0) {
-            index = total - 1;
-            focusIndex = total - 1;
+        focusIndex--;
+        if (focusIndex < 1) {
+            focusIndex = total;
         }
     }
 
@@ -63,16 +58,16 @@ var setFocus = function (index, forward) {
         focusedElements[i].className = "gcsbe-decorated-inner";
     }
 
-    var element = document.getElementById("gcsbe-" + index);
+    var element = document.getElementById("gcsbe-" + focusIndex);
     if (!element) {
         return;
     }
 
     if (!element.parentElement.offsetWidth && !element.parentElement.offsetHeight) {
         if (forward) {
-            setFocus(++focusIndex, true);
+            setFocus(true);
         } else {
-            setFocus(--focusIndex, false);
+            setFocus(false);
         }
     }
     else {
@@ -90,17 +85,28 @@ var reset = function () {
     }
 };
 
-var search = function (lowerCaseInput, regExpInput) {
+var search = function (searchText) {
+    total = focusIndex = 0;
+
+    if (!searchText) {
+        return;
+    }
+
+    var lowerCaseText = searchText.toLowerCase();
+    var escapedText = searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var regExp = new RegExp(escapedText, 'gi');
+
     var decorate = function (element) {
-        for (var i = 0; i < element.childNodes.length; i++) {
+        for (var i = 0, len = element.childNodes.length; i < len; i++) {
             var childNode = element.childNodes[i];
             if (childNode.nodeType === Node.TEXT_NODE) {
-                if (childNode.nodeValue.toLowerCase().indexOf(lowerCaseInput) !== -1) {
+                if (childNode.nodeValue.toLowerCase().indexOf(lowerCaseText) !== -1) {
+                    total++;
+
                     var span = document.createElement("span");
                     span.className = "gcsbe-decorated-outer";
-                    span.innerHTML = childNode.nodeValue.replace(regExpInput, '<span id="gcsbe-' + total + '" class="gcsbe-decorated-inner">$&</span>');
+                    span.innerHTML = childNode.nodeValue.replace(regExp, '<span id="gcsbe-' + total + '" class="gcsbe-decorated-inner">$&</span>');
                     childNode.parentNode.replaceChild(span, childNode);
-                    total++;
                 }
 
                 continue;
@@ -111,12 +117,5 @@ var search = function (lowerCaseInput, regExpInput) {
     };
 
     decorate(document.body);
-    setFocus(0, true);
-};
-
-var initialize = function () {
-    styleElement = document.createElement('style');
-    var sheet = document.head.appendChild(styleElement).sheet;
-    sheet.insertRule('.gcsbe-decorated-inner { background-color: yellow !important; }', 0);
-    sheet.insertRule('.gcsbe-decorated-focused { background-color: #ff9632 !important; }', 1);
+    setFocus(true);
 };
