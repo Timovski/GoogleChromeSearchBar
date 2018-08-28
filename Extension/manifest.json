@@ -1,7 +1,8 @@
 {
     "name": "Search Bar",
+    "short_name": "Search Bar",
     "description": "A slightly better option than the Google Chrome’s default Find Bar.",
-    "version": "0.1",
+    "version": "0.5",
     "manifest_version": 2,
     "permissions": [
         "activeTab",
@@ -24,17 +25,17 @@
     "browser_action": {
         "default_popup": "Popup/popup.html",
         "default_icon": {
-            "16": "images/icon.png",
-            "32": "images/icon.png",
-            "48": "images/icon.png",
-            "128": "images/icon.png"
-          }
+            "16": "Images/icon16.png",
+            "32": "Images/icon32.png",
+            "48": "Images/icon48.png",
+            "128": "Images/icon128.png"
+        }
     },
     "icons": {
-      "16": "images/icon.png",
-      "32": "images/icon.png",
-      "48": "images/icon.png",
-      "128": "images/icon.png"
+        "16": "Images/icon16.png",
+        "32": "Images/icon32.png",
+        "48": "Images/icon48.png",
+        "128": "Images/icon128.png"
     },
     "commands": {
         "_execute_browser_action": {
